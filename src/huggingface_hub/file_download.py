@@ -795,24 +795,24 @@ def cached_download(
     if os.name == "nt" and len(os.path.abspath(cache_path)) > 255:
         cache_path = "\\\\?\\" + os.path.abspath(cache_path)
 
-    with WeakFileLock(lock_path):
-        _download_to_tmp_and_move(
-            incomplete_path=Path(cache_path + ".incomplete"),
-            destination_path=Path(cache_path),
-            url_to_download=url_to_download,
-            proxies=proxies,
-            headers=headers,
-            expected_size=expected_size,
-            filename=filename,
-            force_download=force_download,
-        )
+    
+    _download_to_tmp_and_move(
+        incomplete_path=Path(cache_path + ".incomplete"),
+        destination_path=Path(cache_path),
+        url_to_download=url_to_download,
+        proxies=proxies,
+        headers=headers,
+        expected_size=expected_size,
+        filename=filename,
+        force_download=force_download,
+    )
 
-        if force_filename is None:
-            logger.info("creating metadata file for %s", cache_path)
-            meta = {"url": url, "etag": etag}
-            meta_path = cache_path + ".json"
-            with open(meta_path, "w") as meta_file:
-                json.dump(meta, meta_file)
+    if force_filename is None:
+        logger.info("creating metadata file for %s", cache_path)
+        meta = {"url": url, "etag": etag}
+        meta_path = cache_path + ".json"
+        with open(meta_path, "w") as meta_file:
+            json.dump(meta, meta_file)
 
     return cache_path
 
@@ -1377,19 +1377,19 @@ def _hf_hub_download_to_cache_dir(
         blob_path = "\\\\?\\" + os.path.abspath(blob_path)
 
     Path(lock_path).parent.mkdir(parents=True, exist_ok=True)
-    with WeakFileLock(lock_path):
-        _download_to_tmp_and_move(
-            incomplete_path=Path(blob_path + ".incomplete"),
-            destination_path=Path(blob_path),
-            url_to_download=url_to_download,
-            proxies=proxies,
-            headers=headers,
-            expected_size=expected_size,
-            filename=filename,
-            force_download=force_download,
-        )
-        if not os.path.exists(pointer_path):
-            _create_symlink(blob_path, pointer_path, new_blob=True)
+    
+    _download_to_tmp_and_move(
+        incomplete_path=Path(blob_path + ".incomplete"),
+        destination_path=Path(blob_path),
+        url_to_download=url_to_download,
+        proxies=proxies,
+        headers=headers,
+        expected_size=expected_size,
+        filename=filename,
+        force_download=force_download,
+    )
+    if not os.path.exists(pointer_path):
+        _create_symlink(blob_path, pointer_path, new_blob=True)
 
     return pointer_path
 
@@ -1496,25 +1496,24 @@ def _hf_hub_download_to_local_dir(
             repo_type=repo_type,
         )
         if isinstance(cached_path, str):
-            with WeakFileLock(paths.lock_path):
-                paths.file_path.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(cached_path, paths.file_path)
+            paths.file_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(cached_path, paths.file_path)
             write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
             return str(paths.file_path)
 
     # Otherwise, let's download the file!
-    with WeakFileLock(paths.lock_path):
-        paths.file_path.unlink(missing_ok=True)  # delete outdated file first
-        _download_to_tmp_and_move(
-            incomplete_path=paths.incomplete_path(etag),
-            destination_path=paths.file_path,
-            url_to_download=url_to_download,
-            proxies=proxies,
-            headers=headers,
-            expected_size=expected_size,
-            filename=filename,
-            force_download=force_download,
-        )
+
+    paths.file_path.unlink(missing_ok=True)  # delete outdated file first
+    _download_to_tmp_and_move(
+        incomplete_path=paths.incomplete_path(etag),
+        destination_path=paths.file_path,
+        url_to_download=url_to_download,
+        proxies=proxies,
+        headers=headers,
+        expected_size=expected_size,
+        filename=filename,
+        force_download=force_download,
+    )
 
     write_download_metadata(local_dir=local_dir, filename=filename, commit_hash=commit_hash, etag=etag)
     return str(paths.file_path)
